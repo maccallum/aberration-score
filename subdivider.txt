@@ -1,0 +1,4 @@
+-2, perc1 time -2 2 perc2 time -2 2 perc3 time -2 2;
+0, perc1 time 0 2 perc2 time 0 2 perc3 time 0 2;
+360, perc1 time 360 4 perc2 time 360 4 perc3 time 360 4;
+420, perc1 time 420 4 perc2 time 420 4 perc3 time 420 4;

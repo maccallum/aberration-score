@@ -1,0 +1,31 @@
+Combine Tied Notes and Rests: this file lists the location of any changes that may have been made to your score.
+Score file name: /Users/john/Workspace/zzz_newPiece_tc/perc1_3.sib
+Legend: Type/Count: T = ties, P = syncopation patterns, R = rests. Number in parentheses is the number of ties, patterns, or rests found.
+Staves are numbered relative to the selection, and include any hidden staves contained in the selection.
+ 
+type/count - bar -    voice - staff (Rests)
+ 
+A bar was skipped because its time signature and length do not match. Bar number is 1.
+A bar was skipped because its time signature and length do not match. Bar number is 2.
+A bar was skipped because its time signature and length do not match. Bar number is 3.
+A bar was skipped because its time signature and length do not match. Bar number is 4.
+A bar was skipped because its time signature and length do not match. Bar number is 5.
+A bar was skipped because its time signature and length do not match. Bar number is 6.
+A bar was skipped because its time signature and length do not match. Bar number is 7.
+A bar was skipped because its time signature and length do not match. Bar number is 8.
+A bar was skipped because its time signature and length do not match. Bar number is 9.
+A bar was skipped because its time signature and length do not match. Bar number is 10.
+A bar was skipped because its time signature and length do not match. Bar number is 11.
+R(1)                32       1  1-Percussion
+R(1)                35       1  1-Percussion
+R(1)                39       1  1-Percussion
+R(1)                42       1  1-Percussion
+R(1)                46       1  1-Percussion
+R(1)                48       1  1-Percussion
+R(1)                50       1  1-Percussion
+R(1)                51       1  1-Percussion
+R(1)                52       1  1-Percussion
+R(1)                89       1  1-Percussion
+ 
+The number of rests written was 10
+ 

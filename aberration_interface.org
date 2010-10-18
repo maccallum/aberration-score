@@ -1,0 +1,18 @@
+* TODO playback interface [5/5]
+ - [X] gain sliders [3/3]
+   - [X] each player
+   - [X] remember state
+   - [X] placed in poly and controllable from outside via osc
+ - [X] jump to bar [3/3]
+   - [X] number boxes for each player.  typing a num in one updates the others
+   - [X] display time for that bar
+   - [X] set playback to start from that time automatically
+ - [X] start time [2/2]
+   - [X] enter start time
+   - [X] compute playback speed based on tempo at start of piece
+ - [X] click track synths [2/2]
+   - [X] different synths for each player
+   - [X] put in poly~
+ - [X] subdivisions [2/2]
+   - [X] double for last section
+   - [X] generalize for each player to put different subdivs in other places

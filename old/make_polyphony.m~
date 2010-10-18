@@ -1,0 +1,266 @@
+function make_polyphony()
+    tempoFile = 'sec1_voice%d_tempo.txt';
+    subdivFile = 'sec1_voice%d_subdiv%d.txt';
+    pdfFile = 'sec2_%d-%d.pdf';
+    
+    %grid_minor = [0:125:100000];
+    %grid_major = [0:1000:100000];
+    %grid_minor = load('curvedGrid.txt');
+    %grid_major = grid_minor([1:8:length(grid_minor)]);
+    cg = load('curvedGrid.txt') + 100000;
+    grid_minor = [(0:125:100000) cg(2:length(cg))];
+    grid_major = grid_minor([1:8:length(grid_minor)]);
+    
+    cgt = load('curvedGrid_tempo.txt');
+    grid_tempo_x = [(0:125:100000) cg(2:length(cg))];
+    grid_tempo_y = [ones(1, length(0:125:100000)) cgt(2:length(cgt))];
+    
+    fig = figure('paperorientation', 'portrait', 'papersize', [34 11], 'paperunits', 'inches', 'paperposition', [-5 0 41 11]);	    
+    plot(grid_tempo_x, grid_tempo_y);
+    print('-dpdf', fig, 'fullGrid_tempo.pdf');
+    
+    clear('cg');
+    clear('cgt');
+        
+	voices = cell(1, 8);
+    voices_beats = cell(1, 8);
+    voices_tempo = cell(1, 3);
+    for i=1:3
+        filename = sprintf(tempoFile, i);
+        if exist(filename)
+            tmp = load(filename);
+            voices_tempo(i) = {tmp};
+        end
+        for j=4:7
+            filename = sprintf(subdivFile, i, j);
+            if exist(filename)
+                tmp = load(filename);
+                voices(((i - 1) * 4) + (j - 3)) = {tmp};
+                voices_beats(((i - 1) * 4) + (j - 3)) = {tmp(1:j:length(tmp))};
+            end
+        end
+    end
+    
+    v1_tempo = voices_tempo{1};
+    v2_tempo = voices_tempo{2};
+    v3_tempo = voices_tempo{3};
+    plot(v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)), 'r-',...
+    	v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)), 'g-',...
+        v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)), 'b-');
+    print('-dpdf', fig, 'voices_tempo.pdf');
+    
+    voices_y = [10.4 10.5 10.6 10.7 11.4 11.5 11.6 11.7 12.4 12.5 12.6 12.7];
+    
+    closest = [];
+    closest_y = [];
+    closest2 = [];
+    closest2_y = [];
+    closest3 = [];
+    closest3_y = [];
+    
+    clfid = fopen('closest.txt', 'w');
+    clfid_coll = fopen('closest_coll.txt', 'w');
+    clfid_coll2 = fopen('closest2_coll.txt', 'w');
+    clfid_coll3 = fopen('closest3_coll.txt', 'w');
+    for i=1:length(grid_minor)
+        xx = grid_minor(i);
+        error = [];
+        tmpy = [];
+        val = [];
+        for j=1:length(voices)
+            v = voices{j};
+            [error(length(error) + 1) index] = min(abs(v - xx));
+            tmpy(length(tmpy) + 1) = voices_y(j);
+            val(length(val) + 1) = v(index);
+        end
+        min1 = min(error);
+        
+        if xx == 0
+            min2 = 0;
+            min3 = 0;
+        else
+            min2 = findSecondMin(error);
+            min3 = findThirdMin(error);
+        end
+        
+        for j=1:length(error)
+            if error(j) == min1
+                closest(length(closest) + 1) = val(j);
+                fprintf(clfid, '%f ', val(j));
+                closest_y(length(closest_y) + 1) = tmpy(j);
+                fprintf(clfid_coll, '%d, %d %f;\n', j, floor(tmpy(j)), val(j));
+            end
+            if error(j) == min2
+                closest2(length(closest2) + 1) = val(j);
+                closest2_y(length(closest2_y) + 1) = tmpy(j);
+                fprintf(clfid_coll2, '%d, %d %f;\n', j, floor(tmpy(j)), val(j));
+            end
+            if error(j) == min3
+                closest3(length(closest3) + 1) = val(j);
+                closest3_y(length(closest3_y) + 1) = tmpy(j);
+                fprintf(clfid_coll3, '%d, %d %f;\n', j, floor(tmpy(j)), val(j));
+            end
+        end
+    end
+    fclose(clfid);
+    fclose(clfid_coll);
+    fclose(clfid_coll2);
+    fclose(clfid_coll3);
+    
+    blksize = 8000;
+    fig = figure('paperorientation', 'portrait', 'papersize', [34 22], 'paperunits', 'inches', 'paperposition', [-5 0 41 22]);	
+    for i=0:blksize:max(grid_minor)
+
+        [gminor, gminor_min, gminor_max] = subarray(grid_minor, i, blksize + i - 1);
+        
+        clunique = unique(closest);
+        [cl, clmin, clmax] = subarray(closest, clunique(gminor_min), clunique(gminor_max));
+        cl_y = closest_y(clmin : clmax);
+        
+        clunique = unique(closest2);
+        [cl2, clmin, clmax] = subarray(closest2, clunique(gminor_min), clunique(gminor_max));
+        cl2_y = closest2_y(clmin : clmax);
+        
+        clunique = unique(closest3);
+        [cl3, clmin, clmax] = subarray(closest3, clunique(gminor_min), clunique(gminor_max));
+        cl3_y = closest3_y(clmin : clmax);
+        
+        er = unique(cl) - gminor;
+        er2 = unique(cl2) - gminor;
+        er3 = unique(cl3) - gminor;
+        
+        v1_4 = subarray(voices{1}, i, blksize + i);
+        v1_5 = subarray(voices{2}, i, blksize + i);
+        v1_6 = subarray(voices{3}, i, blksize + i);
+        v1_7 = subarray(voices{4}, i, blksize + i);
+        
+        v2_4 = subarray(voices{5}, i, blksize + i);
+        v2_5 = subarray(voices{6}, i, blksize + i);
+        v2_6 = subarray(voices{7}, i, blksize + i);
+        v2_7 = subarray(voices{8}, i, blksize + i);
+        
+        v3_4 = subarray(voices{9}, i, blksize + i);
+        v3_5 = subarray(voices{10}, i, blksize + i);
+        v3_6 = subarray(voices{11}, i, blksize + i);
+        v3_7 = subarray(voices{12}, i, blksize + i);
+        
+        v1_4_beats = subarray(voices_beats{1}, i, blksize + i);
+        v1_5_beats = subarray(voices_beats{2}, i, blksize + i);
+        v1_6_beats = subarray(voices_beats{3}, i, blksize + i);
+        v1_7_beats = subarray(voices_beats{4}, i, blksize + i);
+        
+        v2_4_beats = subarray(voices_beats{5}, i, blksize + i);
+        v2_5_beats = subarray(voices_beats{6}, i, blksize + i);
+        v2_6_beats = subarray(voices_beats{7}, i, blksize + i);
+        v2_7_beats = subarray(voices_beats{8}, i, blksize + i);
+        
+        v3_4_beats = subarray(voices_beats{9}, i, blksize + i);
+        v3_5_beats = subarray(voices_beats{10}, i, blksize + i);
+        v3_6_beats = subarray(voices_beats{11}, i, blksize + i);
+        v3_7_beats = subarray(voices_beats{12}, i, blksize + i);
+        
+        v1_tempo = voices_tempo{1};
+        v2_tempo = voices_tempo{2};
+        v3_tempo = voices_tempo{3};
+        
+        plot(v1_4, repmat(voices_y(1), 1, length(v1_4)), 'r.', ...
+        	v1_5, repmat(voices_y(2), 1, length(v1_5)), 'r.', ...
+        	v1_6, repmat(voices_y(3), 1, length(v1_6)), 'r.', ...
+        	v1_7, repmat(voices_y(4), 1, length(v1_7)), 'r.', ...
+            ...
+            v2_4, repmat(voices_y(5), 1, length(v2_4)), 'g.', ...
+        	v2_5, repmat(voices_y(6), 1, length(v2_5)), 'g.', ...
+        	v2_6, repmat(voices_y(7), 1, length(v2_6)), 'g.', ...
+        	v2_7, repmat(voices_y(8), 1, length(v2_7)), 'g.', ...
+            ...
+            v3_4, repmat(voices_y(9), 1, length(v3_4)), 'b.', ...
+        	v3_5, repmat(voices_y(10), 1, length(v3_5)), 'b.', ...
+        	v3_6, repmat(voices_y(11), 1, length(v3_6)), 'b.', ...
+        	v3_7, repmat(voices_y(12), 1, length(v3_7)), 'b.', ...
+            ...
+            v1_4_beats, repmat(voices_y(1), 1, length(v1_4_beats)), 'ro', ...
+            v1_5_beats, repmat(voices_y(), 1, length(v1_5_beats)), 'ro', ...
+            v1_6_beats, repmat(voices_y(1), 1, length(v1_6_beats)), 'ro', ...
+            v1_7_beats, repmat(voices_y(1), 1, length(v1_7_beats)), 'ro', ...
+            ...
+            v2_4_beats, repmat(voices_y(1), 1, length(v2_4_beats)), 'go', ...
+            v2_5_beats, repmat(voices_y(1), 1, length(v2_5_beats)), 'go', ...
+            v2_6_beats, repmat(voices_y(1), 1, length(v2_6_beats)), 'go', ...
+            v2_7_beats, repmat(voices_y(1), 1, length(v2_7_beats)), 'go', ...
+            ...
+            v3_4_beats, repmat(voices_y(1), 1, length(v3_4_beats)), 'bo', ...
+            v3_5_beats, repmat(voices_y(1), 1, length(v3_5_beats)), 'bo', ...
+            v3_6_beats, repmat(voices_y(1), 1, length(v3_6_beats)), 'bo', ...
+            v3_7_beats, repmat(voices_y(1), 1, length(v3_7_beats)), 'bo', ...
+            ...
+        	gminor, repmat(0., 1, length(gminor)), '.', ...
+            subarray(grid_major, i, blksize + i), repmat(0., 1, length(subarray(grid_major, i, blksize + i))), 'o', ...
+            %{
+            ...
+            gminor, er / 1000., '*', ...
+            gminor, er2 / 1000., 'x', ...
+            gminor, er3 / 1000., 's', ...
+            ...
+            %}
+            cl, cl_y, 'k*-', ...
+            cl2, cl2_y, 'kx--', ...
+            cl3, cl3_y, 'ks:', ...
+            ...
+            unique(cl), repmat(.1, 1, length(unique(cl))), '.', ...
+            unique(cl2), repmat(.2, 1, length(unique(cl2))), '.', ...
+            unique(cl3), repmat(.3, 1, length(unique(cl3))), '.', ...
+            ...
+            grid_tempo_x, grid_tempo_y, 'c-', ...
+            grid_tempo_x, grid_tempo_y * 8, 'c-', ...
+            ...
+            [i (i+blksize)], [0 0], '-', ...
+            ...
+            v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)), 'r-', ...
+            v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)), 'g-', ...
+            v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)), 'b-', ...
+            ...
+            v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)) * 4., 'r:', ...
+            v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)) * 4., 'g:', ...
+            v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)) * 4., 'b:', ...
+            ...
+            v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)) * 5., 'r:', ...
+            v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)) * 5., 'g:', ...
+            v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)) * 5., 'b:', ...
+            ...
+            v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)) * 6., 'r:', ...
+            v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)) * 6., 'g:', ...
+            v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)) * 6., 'b:', ...
+            ...
+            v1_tempo(1:2:length(v1_tempo)) * 1000., v1_tempo(2:2:length(v1_tempo)) * 7., 'r:', ...
+            v2_tempo(1:2:length(v2_tempo)) * 1000., v2_tempo(2:2:length(v2_tempo)) * 7., 'g:', ...
+            v3_tempo(1:2:length(v3_tempo)) * 1000., v3_tempo(2:2:length(v3_tempo)) * 7., 'b:');
+        
+        axis([i (i + blksize) -.5 13.]);
+        
+        filename = sprintf(pdfFile, i, blksize + i);
+        print('-dpdf', fig, filename);
+    end
+end
+
+function [sa, xmin, xmax] = subarray(x, min, max)
+    xmin = sum(x<min)+1;
+    xmax = length(x) - sum(x>max);
+    sa = x(xmin:xmax);
+end
+
+function cl = findClosest(vec, x)
+    cl = vec(sum(vec<=x));
+end
+
+function [C, I] = findSecondMin(vec)
+    min1 = min(vec);
+    [C, I] = min(((vec == min1) .* realmax) + ((vec ~= min1) .* vec));
+end
+
+function [C, I] = findThirdMin(vec)
+    min1 = min(vec);
+    min2 = findSecondMin(vec);
+    newvec = ((vec == min1) .* realmax) + ((vec ~= min1) .* vec);
+    newvec = ((newvec == min2) .* realmax) + ((newvec ~= min2) .* newvec);
+    [C, I] = min(newvec);
+end

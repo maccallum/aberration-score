@@ -1,0 +1,29 @@
+function curve_tempo()
+    freq = .006;
+    currentTime = 0;
+    tempi = [0];
+    times = [0];
+    
+    minTempo = .5;
+    maxTempo = 1.2;
+    
+    fid = fopen('curvedGrid.txt', 'w');
+    fprintf(fid, '%f ', currentTime * 1000);
+    
+    while currentTime < 100
+        y = tempo(currentTime);
+        currentTime = currentTime + (1/(y*8));
+        times(length(times) + 1) = currentTime;
+        tempi(length(tempi) + 1) = y;
+        fprintf(fid, '%f ', currentTime * 1000);
+    end
+    fclose(fid);
+    
+    plot(times, tempi);
+end
+
+function y = tempo(t)
+    %t = minTempo + (((maxTempo - minTempo) * 0.5) * (1 + sin(2*pi*f*tt + ((7.1551/100) * 2 * pi))));
+    y = 0.5 + (0.2929 * (1 + sin(2 * pi * .00625 * t + (2 * pi * (1/8)))));
+    0.5 + (0.5858 * (0.5 * (1 + sin(2 * pi * .00625 * [0:.0001:160] + (2 * pi * (1/8))))))
+end

@@ -1,0 +1,8 @@
+* score
+  - [X] get all elements in place
+  - [ ] adjust the position of everything
+  - [ ] edit the staves layer to remove bar numbers that collide with notation elements
+  - [ ] page numbers
+  - [ ] add quater= marks to metronome marks
+  - [ ] add dynamics
+  - [ ] do first 3 pages
